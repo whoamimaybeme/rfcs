@@ -64,10 +64,10 @@ There are subtle edge cases to consider here:
 1. First, save the current export table's metatable away, and replace it with a new `CyclicDependencyError` metatable.  This metatable prohibits reads and writes to the table by raising an exception with a clear error message.
 2. Look up the requested module in the cache to see if it has already been loaded or begun loading
 3. If a module is already present in the cache, return it immediately. Otherwise,
-    a. Populate the cache with a fresh table.
-    b. Pass this new table to the target script as its sole argument and evaluate it.  This table can be accessed within the script via `...` at the top level.
-    c. Once the module has been evaluated and returned a value, test to see if that value is the same as the table that was passed in.  If they are not the same, set `CyclicDependencyError` as the metatable on the original export table. (the one that wound up not being used)  The table will also be frozen for good measure.
-    d. Replace the module cache result with the result of the module
+    1. Populate the cache with a fresh table.
+    2. Pass this new table to the target script as its sole argument and evaluate it.  This table can be accessed within the script via `...` at the top level.
+    3. Once the module has been evaluated and returned a value, test to see if that value is the same as the table that was passed in.  If they are not the same, set `CyclicDependencyError` as the metatable on the original export table. (the one that wound up not being used)  The table will also be frozen for good measure.
+    4. Replace the module cache result with the result of the module
 4. Restore the current export table's metatable.
 
 This approach handles many cases, but has an important limitation:  A module that participates in a cycle can freely access imported symbols within function bodies, but not at the top level.  This is because those imported symbols cannot be guaranteed to have been evaluated yet.
