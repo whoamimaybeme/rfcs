@@ -29,20 +29,58 @@ vector.magnitude(<1, 2, 3, 4>)
 <1, 2, 3> -- Expected identifier when parsing expression, got '<1, 2, 3>'
 ```
 
-This RFC does not propose any changes when printing or stringifying vectors. Stringifying vectors will still return `x, y, z` instead of something like `<x, y, z>`.
+The `vector.create` function and the `<x, y, z>` syntax are interchangable.
+
+```lua
+local Foo = {
+    [vector.create(1, 2, 3)] = "Foo",
+    [<4, 5, 6>] = "Bar",
+}
+
+print(Foo[<1, 2, 3>]) -- Foo
+print(Foo[vector.create(4, 5, 6)]) -- Bar
+
+print(vector.create(1, 2, 3) == <1, 2, 3>) -- true
+```
+
+If a number is put next to a vector without a comma separating it, it will just compare the two numbers instead of constructing a vector.
+```lua
+function Foo(...)
+  for i, v in {...} do
+    print(i, v)
+  end
+end
+
+Foo(1 <2, 3, 4> 5)
+-- 1, true
+-- 2, 3
+-- 3, false
+
+Foo(1 <2, 3, 4>)
+-- Expected identifier when parsing expression, got ')'
+```
+
+This RFC does not propose any changes when printing or stringifying vectors. Printing vectors varies based on what runtime you use, and stringifying vectors will still return `"x, y, z"`.
+
+```lua
+print(<1, 2, 3>) -- varies on how the runtime prints vectors
+
+print(tostring(<1, 2, 3>)) -- 1, 2, 3
+print(`<{tostring(<1, 2, 3>)}>`) -- <1, 2, 3>
+```
 
 ## Drawbacks
 
-This may add more syntax to Luau and bloat the language.
+This will add more syntax to Luau, making the language more complex and more bloated.
 
 This syntax is already used for generics, but with how vectors are currently used, this shouldn't be an issue at all.
 
 ## Alternatives
 
-Do nothing; we can already construct vectors with `vector.create` or any other runtime provided vector constructor.
+Do nothing; vectors can already be constructed using `vector.create` or any other runtime provided vector constructor.
 
-A few other syntax designs were proposed in the vector library RFC.
-- `(x, y, z)` is often used for tuples and is used for functions.
-- `[x, y, z]` is used for table indexing, and may raise potential questions with tables with the `__call` metamethod.
-- `vector(x, y, z)` would give the `vector` library a `__call` metamethod, which might require more discussion over whether this is a good idea.
-- `|x, y, z|` is possible, but `<x, y, z>` is probably the better option.
+Use different syntax for constructing vectors instead of using angle brackets. A few of these were suggested in the vector library RFC as possiblities.
+- `(x, y, z)` is often used for tuples and functions, so it would not work.
+- `[x, y, z]` is used for table indexing, so writing out `newtable[[x, y, z]]` may confuse readers. People may also write `newtable[x, y, z]` expecting for it to index the vector.
+- `vector(x, y, z)` would give the `vector` library a `__call` metamethod, which requires more discussion over whether this is a good idea.
+- `|x, y, z|` shouldn't conflict with anything, however, `<x, y, z>` is the better choice for vector constructor syntax.
