@@ -44,6 +44,7 @@ print(vector.create(1, 2, 3) == <1, 2, 3>) -- true
 ```
 
 If a number is put next to a vector without a comma separating it, it will just compare the two numbers instead of constructing a vector.
+
 ```lua
 function Foo(...)
   for i, v in {...} do
@@ -69,11 +70,47 @@ print(tostring(<1, 2, 3>)) -- 1, 2, 3
 print(`<{tostring(<1, 2, 3>)}>`) -- <1, 2, 3>
 ```
 
+---
+
+Since the angle brackets are already used by generics, there are rules that define when angle brackets refer to generics or vectors.
+
+When angle brackets are used after a type name, it will be interpreted as a generic instead of a vector.
+
+```lua
+type Foo<T> = {T}
+type Bar<T = typeof(<1, 2, 3>)> = F<T>
+type Bax
+<T>
+=
+Bar<T>
+```
+
+Angle brackets will also refer to generics within function definitions where they are expected. 
+
+Double brackets used between the function name and the parameters are used for putting types into type parameters when calling functions.
+
+```lua
+type Foo<T> = {T}
+
+local Bar = function<T>(foo: T)
+  -- code
+end
+
+Bar<<vector>>(<1, 2, 3>)
+
+function Baz<T>(foo: T)
+  -- code
+end
+
+Baz<<{typeof(<1, 2, 3>)}>>({<4, 5, 6>} :: Foo<typeof(<7, 8, 9>)>)
+```
+Any other usage interprets it as a vector.
+
 ## Drawbacks
 
 This will add more syntax to Luau, making the language more complex and more bloated.
 
-This syntax is already used for generics, but with how vectors are currently used, this shouldn't be an issue at all.
+Complex constraints must be introduced to differentiate vectors from generics. This could be resolved altogether by using another form of syntax.
 
 ## Alternatives
 
